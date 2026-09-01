@@ -8,6 +8,18 @@
 
 > Unofficial project. xAI and Cursor do not support or endorse it. It relies on an undocumented loopback gateway inside the Grok Bot cloud computer. A Grok Bot update may break it.
 
+## See it working / 运行效果
+
+**Telegram Web.** The paired owner sends a safe demo request and receives the final Grok Bot reply through the bridge. The screenshot excludes the account sidebar, Bot username, and earlier messages.
+
+![Telegram Web showing a private owner message and the bridge reply](docs/images/telegram-web-demo.png)
+
+**Grok Bot.** A separate sanitized status prompt shows the Grok Bot conversation surface. The screenshot excludes the sidebar and unrelated conversation history.
+
+![Grok Bot showing a safe bridge status exchange](docs/images/grok-bot-demo.png)
+
+Telegram Web 展示已配对 owner 的真实双向往返。Grok Bot 展示安全状态对话。两张图都裁掉了账号侧栏、Bot 用户名和无关历史消息。
+
 ## English
 
 This bridge lets one owner message an existing Grok Bot from a private Telegram chat. It runs inside the Grok Bot cloud computer. Your laptop, public webhooks, and inbound ports stay out of the message path.
