@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+# Start the telegram-grok-bridge supervisor if it is not already running.
+# Never prints token contents.
+set -euo pipefail
+
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+# shellcheck source=common.sh
+. "$SCRIPT_DIR/common.sh"
+
+ensure_run_dir
+
+spid=$(read_pid "$SUPERVISE_PID_FILE")
+if pid_alive "$spid"; then
+  printf '%s\n' "already-running"
+  exit 0
+fi
+
+if [ ! -f "$TOKEN_FILE" ]; then
+  echo "telegram token file missing" >&2
+  exit 1
+fi
+mode=$(file_mode "$TOKEN_FILE")
+if [ "$mode" != "600" ]; then
+  echo "telegram token file must be mode 0600" >&2
+  exit 1
+fi
+
+export BRIDGE_ROOT
+export TELEGRAM_TOKEN_FILE="$TOKEN_FILE"
+export PATH
+if [ -n "${BRIDGE_CHILD:-}" ]; then
+  export BRIDGE_CHILD
+fi
+if [ -n "${STATE_PATH:-}" ]; then
+  export STATE_PATH
+fi
+if [ -n "${GATEWAY_PATH:-}" ]; then
+  export GATEWAY_PATH
+fi
+if [ -n "${TELEGRAM_API_BASE:-}" ]; then
+  export TELEGRAM_API_BASE
+fi
+if [ -n "${GROK_AGENT_NAME:-}" ]; then
+  export GROK_AGENT_NAME
+fi
+
+setsid "$SCRIPT_DIR/supervise.sh" </dev/null >/dev/null 2>&1 &
+disown 2>/dev/null || true
+
+deadline=$((SECONDS + 3))
+while [ "$SECONDS" -le "$deadline" ]; do
+  if is_running; then
+    printf '%s\n' "started"
+    exit 0
+  fi
+  sleep 0.1
+done
+echo "start-timeout" >&2
+exit 1

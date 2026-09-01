@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# Print running pid=<supervise> child=<child> or stopped. Never prints token.
+set -euo pipefail
+
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+# shellcheck source=common.sh
+. "$SCRIPT_DIR/common.sh"
+
+ensure_run_dir
+
+if is_running; then
+  printf 'running pid=%s child=%s\n' "$(read_pid "$SUPERVISE_PID_FILE")" "$(read_pid "$CHILD_PID_FILE")"
+else
+  printf '%s\n' "stopped"
+fi
+exit 0

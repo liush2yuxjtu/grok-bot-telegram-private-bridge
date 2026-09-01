@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Setup help and ideas
+    url: https://github.com/liush2yuxjtu/grok-bot-telegram-private-bridge/discussions
+    about: Ask questions, share a setup, or propose an early idea.
+  - name: Private security report
+    url: https://github.com/liush2yuxjtu/grok-bot-telegram-private-bridge/security/advisories/new
+    about: Report vulnerabilities without exposing credentials publicly.

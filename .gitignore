@@ -1,0 +1,13 @@
+.DS_Store
+.env
+.env.*
+!.env.example
+secrets/
+state.json
+run/
+*.log
+*.tmp
+*.tgz
+*.tar.gz
+coverage/
+node_modules/

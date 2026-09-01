@@ -1,0 +1,14 @@
+{
+  "name": "grok-bot-telegram-private-bridge",
+  "private": true,
+  "type": "module",
+  "version": "0.1.0",
+  "description": "Private owner-paired Telegram front end for an existing Grok Bot",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "check": "node --check src/bridge.mjs && node --check src/gateway-client.mjs && node --check src/telegram-client.mjs && node --check src/main.mjs && node --check src/pair.mjs && node --check test/bridge.test.mjs && node --check test/runtime.test.mjs && node --check test/supervise.test.mjs && node --check test/fixtures/dummy-child.mjs && bash -n bin/common.sh && bash -n bin/supervise.sh && bash -n bin/start && bash -n bin/stop && bash -n bin/status && bash -n bin/pair"
+  }
+}

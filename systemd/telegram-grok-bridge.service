@@ -1,0 +1,21 @@
+[Unit]
+Description=telegram-grok-bridge (loopback Sand gateway)
+After=default.target
+
+[Service]
+Type=forking
+PIDFile=%h/.local/share/telegram-grok-bridge/run/supervise.pid
+ExecStart=%h/.local/share/telegram-grok-bridge/bin/start
+ExecStop=%h/.local/share/telegram-grok-bridge/bin/stop
+WorkingDirectory=%h/.local/share/telegram-grok-bridge
+Environment=TELEGRAM_TOKEN_FILE=%h/.local/share/telegram-grok-bridge/secrets/token
+Environment=GATEWAY_PATH=%h/sand-data/gateway.json
+Environment=STATE_PATH=%h/.local/share/telegram-grok-bridge/state.json
+# Set an exact Bot name for stable routing:
+# Environment="GROK_AGENT_NAME=My Bot"
+Restart=on-failure
+RestartSec=2
+NoNewPrivileges=true
+
+[Install]
+WantedBy=default.target

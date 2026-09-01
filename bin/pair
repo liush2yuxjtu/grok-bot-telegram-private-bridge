@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Issue a one-time owner pairing command. The code expires after 10 minutes.
+set -euo pipefail
+
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+# shellcheck source=common.sh
+. "$SCRIPT_DIR/common.sh"
+
+export STATE_PATH="${STATE_PATH:-${HOME}/.local/share/telegram-grok-bridge/state.json}"
+exec "$(command -v node)" "${BRIDGE_ROOT}/src/pair.mjs"

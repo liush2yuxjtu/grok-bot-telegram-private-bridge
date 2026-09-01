@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+# Stop the telegram-grok-bridge supervisor and its child process group.
+# Never prints token contents.
+set -euo pipefail
+
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+# shellcheck source=common.sh
+. "$SCRIPT_DIR/common.sh"
+
+ensure_run_dir
+
+orig_spid=$(read_pid "$SUPERVISE_PID_FILE")
+orig_cpid=$(read_pid "$CHILD_PID_FILE")
+
+if ! pid_alive "$orig_spid" && ! pid_alive "$orig_cpid"; then
+  rm -f "$SUPERVISE_PID_FILE" "$CHILD_PID_FILE"
+  printf '%s\n' "not-running"
+  exit 0
+fi
+
+if pid_alive "$orig_spid"; then
+  kill -TERM "$orig_spid" 2>/dev/null || true
+fi
+
+deadline=$((SECONDS + 5))
+while [ "$SECONDS" -le "$deadline" ]; do
+  if ! pid_alive "$orig_spid" && ! pid_alive "$orig_cpid"; then
+    break
+  fi
+  sleep 0.1
+done
+
+if pid_alive "$orig_spid"; then
+  kill -KILL "$orig_spid" 2>/dev/null || true
+fi
+if pid_alive "$orig_cpid"; then
+  kill -KILL -- "-$orig_cpid" 2>/dev/null || kill -KILL "$orig_cpid" 2>/dev/null || true
+fi
+
+# If a relaunch happened before TERM was delivered, sweep the latest child pid too.
+latest_cpid=$(read_pid "$CHILD_PID_FILE")
+if pid_alive "$latest_cpid" && [ "$latest_cpid" != "$orig_cpid" ]; then
+  kill -KILL -- "-$latest_cpid" 2>/dev/null || kill -KILL "$latest_cpid" 2>/dev/null || true
+fi
+latest_spid=$(read_pid "$SUPERVISE_PID_FILE")
+if pid_alive "$latest_spid" && [ "$latest_spid" != "$orig_spid" ]; then
+  kill -KILL "$latest_spid" 2>/dev/null || true
+fi
+
+rm -f "$SUPERVISE_PID_FILE" "$CHILD_PID_FILE"
+printf '%s\n' "stopped"
+exit 0

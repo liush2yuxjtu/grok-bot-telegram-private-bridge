@@ -1,0 +1,29 @@
+name: Feature request
+description: Propose one bounded improvement
+title: "[feature]: "
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: Do not include credentials, account identifiers, private paths, or conversation content.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What cannot you do today? Include one concrete example.
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Expected outcome
+      description: What observable behavior would solve it?
+    validations:
+      required: true
+  - type: textarea
+    id: boundary
+    attributes:
+      label: Security boundary
+      description: Which new data, permission, chat type, or external service would this touch?
+    validations:
+      required: true
