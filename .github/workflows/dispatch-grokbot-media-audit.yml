@@ -1,0 +1,31 @@
+name: Dispatch Grokbot media audit
+
+on:
+  push:
+    branches:
+      - ops/grokbot-media-audit-20260920
+
+permissions:
+  contents: read
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Wake Grokbot for exact Airtable task
+        env:
+          GROKBOT_EVENT_URL: https://grokbot.tail6a877d.ts.net/agent-tasks/v1/notify
+          RECORD_ID: rec768DfzNq3eDMPG
+          EVENT_ID: gh-media-audit-20260920-v1
+        shell: bash
+        run: |
+          set -euo pipefail
+          payload="$(printf '{"recordId":"%s","eventId":"%s"}' "$RECORD_ID" "$EVENT_ID")"
+          http_code="$(curl --silent --show-error --location             --connect-timeout 10 --max-time 30             --output /tmp/grokbot-response.json             --write-out '%{http_code}'             --request POST "$GROKBOT_EVENT_URL"             --header 'content-type: application/json'             --data "$payload")"
+          cat /tmp/grokbot-response.json
+          echo
+          echo "HTTP $http_code"
+          if [[ "$http_code" != "202" && "$http_code" != "200" ]]; then
+            exit 1
+          fi
