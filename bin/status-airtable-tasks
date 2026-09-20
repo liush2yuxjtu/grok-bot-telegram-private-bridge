@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Status for only the event-driven Airtable task webhook.
+set -euo pipefail
+
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+BRIDGE_ROOT=$(cd "$SCRIPT_DIR/.." && pwd)
+export BRIDGE_ROOT
+export BRIDGE_RUN_DIR="${BRIDGE_ROOT}/run-airtable-tasks"
+# shellcheck source=common.sh
+. "$SCRIPT_DIR/common.sh"
+ensure_run_dir
+
+if is_running; then
+  printf 'running pid=%s child=%s polling=no\n' "$(read_pid "$SUPERVISE_PID_FILE")" "$(read_pid "$CHILD_PID_FILE")"
+else
+  printf '%s\n' "stopped"
+fi
