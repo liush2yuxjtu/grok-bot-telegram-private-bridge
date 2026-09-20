@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# Start the event-driven Airtable task webhook. No Airtable polling.
+set -euo pipefail
+
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+BRIDGE_ROOT=$(cd "$SCRIPT_DIR/.." && pwd)
+export BRIDGE_ROOT
+export BRIDGE_RUN_DIR="${BRIDGE_ROOT}/run-airtable-tasks"
+export BRIDGE_CHILD="${BRIDGE_ROOT}/src/airtable-task-webhook.mjs"
+export GATEWAY_PATH="${GATEWAY_PATH:-${HOME}/sand-data/gateway.json}"
+export AIRTABLE_TASK_HOST="${AIRTABLE_TASK_HOST:-127.0.0.1}"
+export AIRTABLE_TASK_PORT="${AIRTABLE_TASK_PORT:-8790}"
+export AIRTABLE_TASK_RATE_LIMIT_PER_MINUTE="${AIRTABLE_TASK_RATE_LIMIT_PER_MINUTE:-12}"
+export PATH
+
+# shellcheck source=common.sh
+. "$SCRIPT_DIR/common.sh"
+ensure_run_dir
+
+spid=$(read_pid "$SUPERVISE_PID_FILE")
+if pid_alive "$spid"; then
+  printf '%s\n' "already-running"
+  exit 0
+fi
+
+setsid "$SCRIPT_DIR/supervise.sh" </dev/null >/dev/null 2>&1 &
+disown 2>/dev/null || true
+
+deadline=$((SECONDS + 4))
+while [ "$SECONDS" -le "$deadline" ]; do
+  if is_running; then
+    printf '%s\n' "started"
+    exit 0
+  fi
+  sleep 0.1
+done
+echo "start-timeout" >&2
+exit 1
