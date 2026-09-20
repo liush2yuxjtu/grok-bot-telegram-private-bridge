@@ -3,7 +3,8 @@
 
 _SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 : "${BRIDGE_ROOT:=$(cd "$_SCRIPT_DIR/.." && pwd)}"
-RUN_DIR="${BRIDGE_ROOT}/run"
+: "${BRIDGE_RUN_DIR:=${BRIDGE_ROOT}/run}"
+RUN_DIR="$BRIDGE_RUN_DIR"
 SUPERVISE_PID_FILE="${RUN_DIR}/supervise.pid"
 CHILD_PID_FILE="${RUN_DIR}/child.pid"
 LOCK_DIR="${RUN_DIR}/supervise.lock"
