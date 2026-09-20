@@ -115,3 +115,13 @@ test("health explicitly reports event-driven non-polling mode", async () => {
     });
   });
 });
+
+
+test("Funnel-mounted prefix reaches the same receiver", async () => {
+  await withServer(async ({ baseUrl }) => {
+    const response = await fetch(`${baseUrl}/agent-tasks/healthz`);
+    assert.equal(response.status, 200);
+    const body = await response.json();
+    assert.equal(body.polling, false);
+  });
+});
