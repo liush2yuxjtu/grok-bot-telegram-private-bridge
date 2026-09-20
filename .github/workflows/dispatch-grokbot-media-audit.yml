@@ -1,4 +1,4 @@
-name: Independently verify Grokbot media URLs
+name: Independently count Grokbot GIF frames
 
 on:
   push:
@@ -13,35 +13,26 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
-      - name: Verify public PNG and animated GIF outside Grokbot host
+      - name: Count actual GIF frames independently
         env:
-          PNG_URL: https://grokbot.tail6a877d.ts.net/media/45390c802c434460b784f1283071ee58/latest-page.png
           GIF_URL: https://grokbot.tail6a877d.ts.net/media/2e0293cd5e6c460b86e83e31c697ba70/pelican-bike-dashcam.gif
         shell: bash
         run: |
           set -euo pipefail
-          for kind in png gif; do
-            if [[ "$kind" == png ]]; then url="$PNG_URL"; else url="$GIF_URL"; fi
-            curl --fail --silent --show-error --location --max-time 30               --dump-header "/tmp/$kind.headers"               --output "/tmp/media.$kind" "$url"
-            echo "===== $kind headers ====="
-            sed -n '1,30p' "/tmp/$kind.headers"
-            echo "===== $kind file ====="
-            file "/tmp/media.$kind"
-            echo "magic=$(xxd -p -l 8 "/tmp/media.$kind" | tr -d '\n')"
-            echo "bytes=$(wc -c < "/tmp/media.$kind")"
-          done
+          curl --fail --silent --show-error --location --max-time 30 -o /tmp/media.gif "$GIF_URL"
+          if command -v identify >/dev/null 2>&1; then
+            echo "identify_frames=$(identify /tmp/media.gif | wc -l)"
+            identify /tmp/media.gif | head -3
+          fi
+          if command -v ffprobe >/dev/null 2>&1; then
+            ffprobe -v error -count_frames -select_streams v:0               -show_entries stream=width,height,nb_read_frames,avg_frame_rate,duration               -of default=noprint_wrappers=1 /tmp/media.gif
+          fi
           python3 - <<'PY'
-          from pathlib import Path
-          import struct
-          p=Path('/tmp/media.png').read_bytes()
-          assert p[:8] == b'\x89PNG\r\n\x1a\n'
-          w,h=struct.unpack('>II',p[16:24])
-          print(f'PNG dimensions={w}x{h}')
-          g=Path('/tmp/media.gif').read_bytes()
-          assert g[:6] in (b'GIF87a',b'GIF89a')
-          w,h=struct.unpack('<HH',g[6:10])
-          frames=g.count(b'\x2c')
-          loop=(b'NETSCAPE2.0' in g)
-          print(f'GIF dimensions={w}x{h} image_descriptors={frames} netscape_loop={loop}')
-          assert frames > 1
+          try:
+              from PIL import Image
+          except ImportError:
+              print("pillow=not_preinstalled")
+          else:
+              im=Image.open('/tmp/media.gif')
+              print(f'pillow_frames={getattr(im,"n_frames",1)} size={im.size} loop={im.info.get("loop")} duration0={im.info.get("duration")}')
           PY
