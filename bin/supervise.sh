@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
-# Self-recovery wrapper for telegram-grok-bridge.
-# Modeled on /usr/local/bin/supervise-sand-supervisor:
+# Self-recovery wrapper for telegram-grok-bridge and sibling event-driven inputs.
 # TERM the child process group on stop; exponential backoff (1,2,4,... cap 30s)
 # on unexpected child exit; parent stays alive. Does not restart after SIGTERM.
 set -uo pipefail
@@ -16,7 +15,7 @@ touch "$LOG_FILE"
 chmod 0600 "$LOG_FILE"
 
 log() {
-  # Never log token contents, Bearer, URLs, or TELEGRAM_TOKEN_FILE values.
+  # Never log credential contents, Bearer values, URLs, or token-file values.
   printf '%s %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$*" >> "$LOG_FILE"
 }
 
@@ -73,7 +72,7 @@ if [ -z "$node_bin" ]; then
 fi
 
 while [ "${stopping}" = "0" ]; do
-  env_cmd=(env -i "PATH=${PATH:-/usr/bin:/bin}")
+  env_cmd=(env -i "PATH=${PATH:-/usr/bin:/bin}" "HOME=${HOME:-}")
   if [ -n "${TELEGRAM_TOKEN_FILE:-}" ]; then
     env_cmd+=("TELEGRAM_TOKEN_FILE=${TELEGRAM_TOKEN_FILE}")
   fi
@@ -88,6 +87,18 @@ while [ "${stopping}" = "0" ]; do
   fi
   if [ -n "${GROK_AGENT_NAME:-}" ]; then
     env_cmd+=("GROK_AGENT_NAME=${GROK_AGENT_NAME}")
+  fi
+  if [ -n "${AIRTABLE_TASK_HOST:-}" ]; then
+    env_cmd+=("AIRTABLE_TASK_HOST=${AIRTABLE_TASK_HOST}")
+  fi
+  if [ -n "${AIRTABLE_TASK_PORT:-}" ]; then
+    env_cmd+=("AIRTABLE_TASK_PORT=${AIRTABLE_TASK_PORT}")
+  fi
+  if [ -n "${AIRTABLE_TASK_RATE_LIMIT_PER_MINUTE:-}" ]; then
+    env_cmd+=("AIRTABLE_TASK_RATE_LIMIT_PER_MINUTE=${AIRTABLE_TASK_RATE_LIMIT_PER_MINUTE}")
+  fi
+  if [ -n "${AIRTABLE_TASK_GATEWAY_TIMEOUT_MS:-}" ]; then
+    env_cmd+=("AIRTABLE_TASK_GATEWAY_TIMEOUT_MS=${AIRTABLE_TASK_GATEWAY_TIMEOUT_MS}")
   fi
 
   touch "$CHILD_LOG_FILE"
