@@ -129,11 +129,14 @@ export function startAirtableTaskWebhook(options = {}) {
   const server = http.createServer(async (req, res) => {
     try {
       const url = new URL(req.url || "/", "http://127.0.0.1");
-      if (req.method === "GET" && url.pathname === "/healthz") {
+      const path = url.pathname.startsWith("/agent-tasks/")
+        ? url.pathname.slice("/agent-tasks".length)
+        : url.pathname;
+      if (req.method === "GET" && path === "/healthz") {
         json(res, 200, { ok: true, mode: "event-driven", polling: false });
         return;
       }
-      if (url.pathname !== "/v1/notify") {
+      if (path !== "/v1/notify") {
         json(res, 404, { error: "not_found" });
         return;
       }
