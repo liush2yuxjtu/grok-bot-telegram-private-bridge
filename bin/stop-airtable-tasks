@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# Stop only the Airtable task webhook supervisor.
+set -euo pipefail
+
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+BRIDGE_ROOT=$(cd "$SCRIPT_DIR/.." && pwd)
+export BRIDGE_ROOT
+export BRIDGE_RUN_DIR="${BRIDGE_ROOT}/run-airtable-tasks"
+# shellcheck source=common.sh
+. "$SCRIPT_DIR/common.sh"
+ensure_run_dir
+
+orig_spid=$(read_pid "$SUPERVISE_PID_FILE")
+orig_cpid=$(read_pid "$CHILD_PID_FILE")
+if ! pid_alive "$orig_spid" && ! pid_alive "$orig_cpid"; then
+  rm -f "$SUPERVISE_PID_FILE" "$CHILD_PID_FILE"
+  printf '%s\n' "not-running"
+  exit 0
+fi
+if pid_alive "$orig_spid"; then kill -TERM "$orig_spid" 2>/dev/null || true; fi
+
+deadline=$((SECONDS + 5))
+while [ "$SECONDS" -le "$deadline" ]; do
+  if ! pid_alive "$orig_spid" && ! pid_alive "$orig_cpid"; then break; fi
+  sleep 0.1
+done
+if pid_alive "$orig_spid"; then kill -KILL "$orig_spid" 2>/dev/null || true; fi
+if pid_alive "$orig_cpid"; then
+  kill -KILL -- "-$orig_cpid" 2>/dev/null || kill -KILL "$orig_cpid" 2>/dev/null || true
+fi
+rm -f "$SUPERVISE_PID_FILE" "$CHILD_PID_FILE"
+printf '%s\n' "stopped"
