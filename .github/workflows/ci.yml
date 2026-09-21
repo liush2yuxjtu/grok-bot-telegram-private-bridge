@@ -1,9 +1,7 @@
 name: CI
 
+# Pre-PR checks moved to local /verify; manual fallback only.
 on:
-  push:
-    branches: [main]
-  pull_request:
   workflow_dispatch:
 
 permissions:
